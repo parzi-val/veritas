@@ -2,6 +2,7 @@ import inspect
 import queue
 import asyncio
 from veritas.datastructs import ThreadSafeDict, AsyncSafeDict
+from veritas.exceptions import UnsafeSharedArgumentError, MissingSharedArgumentError
 
 SAFE_MUTABLE_TYPES = (queue.Queue, asyncio.Queue, ThreadSafeDict, AsyncSafeDict)
 
@@ -19,7 +20,7 @@ class VeritasWrapper:
         if shared_param is None or shared_param.default is inspect.Parameter.empty:
             if self._unsafe:
                 return None
-            raise ValueError("No 'shared' default provided, or not set. Use unsafe=True to bypass.")
+            raise MissingSharedArgumentError()
 
         shared_value = shared_param.default
         if self._unsafe:
@@ -30,7 +31,12 @@ class VeritasWrapper:
         elif not is_async and isinstance(shared_value, (ThreadSafeDict, queue.Queue)):
             return shared_value
 
-        raise ValueError(f"'shared' must be of type {SAFE_MUTABLE_TYPES}")
+        pretty_safe_types = '\n'.join(f'  - {t.__module__}.{t.__name__}' for t in SAFE_MUTABLE_TYPES)
+        raise UnsafeSharedArgumentError(
+            f"Invalid type for 'shared' argument: found {type(shared_value).__name__}.\n"
+            f"Please use one of the following safe mutable types:\n{pretty_safe_types}\n\n"
+            f"To bypass this check, use @veritas(unsafe=True)."
+        )
 
 
     def __call__(self, *args, **kwargs):
