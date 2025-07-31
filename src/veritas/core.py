@@ -1,8 +1,10 @@
 import inspect
 import queue
 import asyncio
+import functools
 from veritas.datastructs import ThreadSafeDict, AsyncSafeDict
 from veritas.exceptions import UnsafeSharedArgumentError, MissingSharedArgumentError
+
 
 SAFE_MUTABLE_TYPES = (queue.Queue, asyncio.Queue, ThreadSafeDict, AsyncSafeDict)
 
@@ -25,6 +27,8 @@ class VeritasWrapper:
         self._func = func
         self._unsafe = unsafe
         self._state = self._extract_mutable_default()
+
+        functools.update_wrapper(self, func)
 
     def _extract_mutable_default(self):
         """

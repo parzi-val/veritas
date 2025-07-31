@@ -3,7 +3,7 @@ from veritas import veritas
 from veritas.exceptions import UnsafeSharedArgumentError, MissingSharedArgumentError
 
 def test_unsafe_shared_argument_raises_error():
-    with pytest.raises(UnsafeSharedArgumentError, match="'shared' must be of type .* but got <class 'dict'>. Use unsafe=True to bypass this check."):
+    with pytest.raises(UnsafeSharedArgumentError, match=r"Invalid type.*dict.*unsafe=True"):
         @veritas
         def unsafe_function(shared={}):
             pass
